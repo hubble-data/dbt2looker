@@ -78,6 +78,7 @@ view: ugc__shopper_experience_store_aggregation {
     description: ""
     type: number
     sql: case when ${currency} is not null then ${orders_count} else 0 end ;;
+    primary_key: no
   }
 
   measure: engagement {

@@ -410,6 +410,7 @@ def lookml_calculated_dimension(dimension: models.Dbt2LookerExploreDimension):
         "description": dimension.description,
         "type": dimension.type.value,
         "sql": _remove_escape_characters(dimension.sql),
+        "primary_key": "yes" if dimension.primary_key else "no",
     }
 
     if dimension.hidden:
@@ -543,13 +544,22 @@ def _convert_all_refs_to_relation_name(ref_str: str, handle_spaces: bool = True)
         return ref_str
 
     if handle_spaces:
-        ref_str = ref_str.replace(" ", "").replace("=", " = ")
+        ref_str = _add_leading_spaces_before_and_after_operators(ref_str.replace(" ", ""))
     for group_value in matches:
         ref_str = ref_str.replace(f"ref('{group_value}')", group_value)
     # in case of a compound expression with logical operator , i.e : ${join1} and ${join2} - we would like
     # to add a space between the logical operator so all elements between }...$ are captured and added a pre and post space
     ref_str = re.sub(r"}(.*?)\$", r"} \1 $", ref_str)
     return ref_str
+
+
+def _add_leading_spaces_before_and_after_operators(sql: str) -> str:
+    pattern = re.compile(r"\b(\w+)\s*([=<>!]+)\s*(\w+)\b")
+    return pattern.sub(replace_operator_match, sql)
+
+
+def replace_operator_match(match) -> str:
+    return f"{match.group(1)} {match.group(2)} {match.group(3)}"
 
 
 def _extract_all_refs(ref_str: str) -> list[str]:

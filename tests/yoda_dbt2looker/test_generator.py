@@ -10,20 +10,32 @@ def test__convert_all_refs_to_relation_name():
     result = generator._convert_all_refs_to_relation_name(
         " ${ref('model1').key1} = ${ref('model2').key2}"
     )
-    assert result == "${model1.key1}  =  ${model2.key2}"
+    assert result == "${model1.key1} = ${model2.key2}"
     result = generator._convert_all_refs_to_relation_name(
         " ${ref('model1').key1} = ${ref('model2').key2} and ${ref('model1').key2} = ${ref('model3').key1}"
     )
     assert (
-        result
-        == "${model1.key1}  =  ${model2.key2} and ${model1.key2}  =  ${model3.key1}"
+        result == "${model1.key1} = ${model2.key2} and ${model1.key2} = ${model3.key1}"
     )
     result = generator._convert_all_refs_to_relation_name(
         " (${ref('model1').key1} = ${ref('model2').key2} and ${ref('model1').key2} = ${ref('model3').key1}) or (${ref('model4').key1} = ${ref('model5').key2} or ${ref('model6').key2} = ${ref('model7').key1})"
     )
     assert (
         result
-        == "(${model1.key1}  =  ${model2.key2} and ${model1.key2}  =  ${model3.key1} )or( ${model4.key1}  =  ${model5.key2} or ${model6.key2}  =  ${model7.key1})"
+        == "(${model1.key1} = ${model2.key2} and ${model1.key2} = ${model3.key1} )or( ${model4.key1} = ${model5.key2} or ${model6.key2} = ${model7.key1})"
+    )
+    result = generator._convert_all_refs_to_relation_name(
+        " ${ref('model1').key1} >= ${ref('model2').key2} and ${ref('model1').key2} <= ${ref('model3').key1}"
+    )
+    assert (
+        result
+        == "${model1.key1} >= ${model2.key2} and ${model1.key2} <= ${model3.key1}"
+    )
+    result = generator._convert_all_refs_to_relation_name(
+        " ${ref('model1').key1} != ${ref('model2').key2} and ${ref('model1').key2} > ${ref('model3').key1}"
+    )
+    assert (
+        result == "${model1.key1} != ${model2.key2} and ${model1.key2} > ${model3.key1}"
     )
 
 
@@ -388,6 +400,7 @@ def test_lookml_calculated_dimension():
         sql="case when 1=1 then 1 else 0 end",
         description="custom dimension",
         type="number",
+        primary_key=False,
     )
     value = generator.lookml_calculated_dimension(dimension1)
     assert value == {
@@ -395,6 +408,23 @@ def test_lookml_calculated_dimension():
         "type": "number",
         "sql": "case when 1=1 then 1 else 0 end",
         "description": "custom dimension",
+        "primary_key": "no",
+    }
+    dimension1 = models.Dbt2LookerExploreDimension(
+        name="custom_dimension_1",
+        model="ref('model_1')",
+        sql="case when 1=1 then 1 else 0 end",
+        description="custom dimension",
+        type="number",
+        primary_key=True,
+    )
+    value = generator.lookml_calculated_dimension(dimension1)
+    assert value == {
+        "name": "custom_dimension_1",
+        "type": "number",
+        "sql": "case when 1=1 then 1 else 0 end",
+        "description": "custom dimension",
+        "primary_key": "yes",
     }
 
 
