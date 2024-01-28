@@ -227,6 +227,7 @@ class Dbt2LookerExploreDimension(BaseModel):
     model: str
     type: LookerCustomDimensions
     sql: str
+    primary_key: bool = False
     hidden: Optional[str] = None
     description: Optional[str] = ""
 
