@@ -1,8 +1,11 @@
 from unittest.mock import MagicMock
+
+import pytest
 from yoda_dbt2looker import models
 from yoda_dbt2looker.parser import (
     _extract_measures_models,
     _extract_exposure_models,
+    _assign_model_labels,
 )
 
 
@@ -62,3 +65,15 @@ def test__extract_models():
         "model_1": [exposure.meta.looker.dimensions[0]],
         "model_2": [exposure.meta.looker.dimensions[1]],
     }
+
+
+def test__assign_model_labels():
+    model_node = MagicMock()
+    model_node.model_labels = None
+    _assign_model_labels({}, "model1", model_node)
+    assert model_node.model_labels is None
+    model_labels = MagicMock()
+    _assign_model_labels({"model1": [model_labels]}, "model1", model_node)
+    assert model_node.model_labels == model_labels
+    with pytest.raises(Exception, match="Exposure model_labels should be a list of one element for model model1"):
+        _assign_model_labels({"model1": [model_labels, model_labels]}, "model1", model_node)

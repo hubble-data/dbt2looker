@@ -282,7 +282,7 @@ def lookml_dimensions_from_model(
     return dimensions
 
 
-def _generate_dimensions(model, adapter_type):
+def _generate_dimensions(model: models.DbtModel, adapter_type):
     return [
         {
             "name": column.meta.dimension.name or column.name,
@@ -299,12 +299,22 @@ def _generate_dimensions(model, adapter_type):
                 )
                 else {}
             ),
+            **(
+                _extract_column_label(model, column)
+            ),
         }
         for column in model.columns.values()
         if column.meta.dimension.enabled
         and map_adapter_type_to_looker(adapter_type, column.data_type)
         in looker_scalar_types
     ]
+
+
+def _extract_column_label(model: models.DbtModel, column: models.DbtModelColumn):
+    if model.model_labels and model.model_labels.columns_labels and model.model_labels.columns_labels.get(column.name):
+        return {"label": model.model_labels.columns_labels.get(column.name)} 
+    else:
+        return {}
 
 
 def _generate_compound_primary_key_if_needed(model: models.DbtModel) -> Optional[dict]:
@@ -390,6 +400,8 @@ def lookml_measure(
         m["filters"] = lookml_measure_filters(measure, model)
     if measure.value_format_name:
         m["value_format_name"] = measure.value_format_name.value
+    if measure.label:
+        m["label"] = measure.label
     return m
 
 
@@ -401,6 +413,7 @@ def lookml_exposure_measure(measure: models.Dbt2LookerExploreMeasure):
         "sql": _convert_all_refs_to_relation_name(
             _remove_escape_characters(measure.sql), False
         ),
+        ** ({"label": measure.label} if measure.label else {}),
     }
 
 
@@ -415,7 +428,8 @@ def lookml_calculated_dimension(dimension: models.Dbt2LookerExploreDimension):
 
     if dimension.hidden:
         tmp_dimension["hidden"] = dimension.hidden
-
+    if dimension.label:
+        tmp_dimension["label"] = dimension.label
     return tmp_dimension
 
 
@@ -483,6 +497,7 @@ def lookml_view_from_dbt_model(
             "measures": lookml_measures_from_model(model),
         }
     }
+    _generate_view_label_if_needed(model, lookml)
     parameters = [
         lookml_parameter_exposure(parameter_exposure)
         for parameter_exposure in model.parameters_exposure
@@ -509,6 +524,11 @@ def lookml_view_from_dbt_model(
         raise e
     filename = f"{model.name}.view.lkml"
     return models.LookViewFile(filename=filename, contents=contents)
+
+
+def _generate_view_label_if_needed(model: models.DbtModel, lookml):
+    if model.model_labels and model.model_labels.model_label:
+        lookml["view"]["label"] = model.model_labels.model_label
 
 
 def _get_model_relation_name(model: models.DbtModel):
@@ -544,7 +564,9 @@ def _convert_all_refs_to_relation_name(ref_str: str, handle_spaces: bool = True)
         return ref_str
 
     if handle_spaces:
-        ref_str = _add_leading_spaces_before_and_after_operators(ref_str.replace(" ", ""))
+        ref_str = _add_leading_spaces_before_and_after_operators(
+            ref_str.replace(" ", "")
+        )
     for group_value in matches:
         ref_str = ref_str.replace(f"ref('{group_value}')", group_value)
     # in case of a compound expression with logical operator , i.e : ${join1} and ${join2} - we would like

@@ -129,6 +129,7 @@ def parse_typed_models(
     dimension_groups = {}
     parameters = {}
     filters = {}
+    models_labels = {}
     for exposure in typed_dbt_exposures:
         ref_model = _extract_all_refs(exposure.meta.looker.main_model)
         if not ref_model:
@@ -170,6 +171,11 @@ def parse_typed_models(
             dimension_groups,
             exposure.meta.looker.dimension_groups,
         )
+        _extract_exposure_models(
+            exposure_model_views,
+            models_labels,
+            exposure.meta.looker.model_labels,
+        )
 
     for model in exposure_model_views:
         model_loopup = f"model.{dbt_project_name}.{model}"
@@ -188,6 +194,7 @@ def parse_typed_models(
             model_node.parameters_exposure = parameters[model]
         if model in filters:
             model_node.filters_exposure = filters[model]
+        _assign_model_labels(models_labels, model, model_node)
         exposure_nodes.append(model_node)
 
     adapter_type = parse_adapter_type(raw_manifest)
@@ -242,6 +249,19 @@ def parse_typed_models(
     )
     check_models_for_missing_column_types(dbt_typed_models)
     return dbt_typed_models
+
+
+def _assign_model_labels(models_labels, model, model_node):
+    if model in models_labels:
+        if len(models_labels[model]) > 1:
+            logging.error(
+                f"Exposure model_labels {models_labels[model]} should be a list of one element"
+            )
+            raise Exception(
+                f"Exposure model_labels should be a list of one element for model {model}"
+            )
+        model_node.model_labels = models_labels[model][0]
+
 
 
 def _extract_measures_models(

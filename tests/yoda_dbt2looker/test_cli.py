@@ -34,6 +34,15 @@ def assert_folders_equal(folder1, folder2):
     comparison = filecmp.dircmp(folder1, folder2)
 
     # Check for common files
+    if comparison.diff_files:
+        print(f"Files that are different: {comparison.diff_files}")
+        raise AssertionError("Files are different")
+    if comparison.left_only:
+        print(f"Files that are only in {folder1}: {comparison.left_only}")
+        raise AssertionError("Files are different")
+    if comparison.right_only:
+        print(f"Files that are only in {folder2}: {comparison.right_only}")
+        raise AssertionError("Files are different")
     common_files = comparison.common_files
     for file in common_files:
         file1_path = os.path.join(folder1, file)
