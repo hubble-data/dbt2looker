@@ -137,6 +137,7 @@ class Dbt2LookerMeasure(BaseModel):
     description: Optional[str]
     sql: Optional[str]
     value_format_name: Optional[LookerValueFormatName]
+    label: Optional[str] = None
 
     @validator("filters")
     def filters_are_singular_dicts(cls, v: List[Dict[str, str]]):
@@ -220,6 +221,7 @@ class Dbt2LookerExploreMeasure(BaseModel):
     sql: str
     filters: Optional[List[Dict[str, str]]] = None
     description: Optional[str] = ""
+    label: Optional[str] = None
 
 
 class Dbt2LookerExploreDimension(BaseModel):
@@ -230,6 +232,7 @@ class Dbt2LookerExploreDimension(BaseModel):
     primary_key: bool = False
     hidden: Optional[str] = None
     description: Optional[str] = ""
+    label: Optional[str] = None
 
 
 class Dbt2LookerExploreParameter(BaseModel):
@@ -261,6 +264,12 @@ class Dbt2LookerExploreDimensionGroupDuration(BaseModel):
     description: Optional[str] = ""
 
 
+class Dbt2LookerModelLabels(BaseModel):
+    model: str
+    model_label: str
+    columns_labels: Dict[str, str]
+
+
 class Dbt2MetaLookerModelMeta(BaseModel):
     joins: Optional[List[Dbt2LookerExploreJoin]] = []
     main_model: str
@@ -271,6 +280,7 @@ class Dbt2MetaLookerModelMeta(BaseModel):
     dimension_groups: Optional[List[Dbt2LookerExploreDimensionGroupDuration]] = []
     parameters: Optional[List[Dbt2LookerExploreParameter]] = []
     filters: Optional[List[Dbt2LookerExploreFilter]] = []
+    model_labels: Optional[List[Dbt2LookerModelLabels]]
 
 
 class Dbt2LookerModelMeta(BaseModel):
@@ -313,6 +323,7 @@ class DbtModel(DbtNode):
     ] = []
     parameters_exposure: Optional[List[Dbt2LookerExploreParameter]] = []
     filters_exposure: Optional[List[Dbt2LookerExploreFilter]] = []
+    model_labels: Optional[Dbt2LookerModelLabels]
 
     @validator("columns")
     def case_insensitive_column_names(cls, v: Dict[str, DbtModelColumn]):

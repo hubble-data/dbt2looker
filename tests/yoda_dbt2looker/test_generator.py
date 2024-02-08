@@ -63,9 +63,10 @@ def test__generate_dimensions_column_enabled_not_scalar_type_returns_empty_list(
     assert map_adapter_type_to_looker_mock.mock_calls == [call(adapter_type, data_type)]
 
 
+@patch("yoda_dbt2looker.generator._extract_column_label")
 @patch("yoda_dbt2looker.generator.map_adapter_type_to_looker")
 def test__generate_dimensions_column_enabled_has_sql_returns_dimension(
-    map_adapter_type_to_looker_mock,
+    map_adapter_type_to_looker_mock, _extract_column_label_mock
 ):
     model = MagicMock()
     column = MagicMock()
@@ -79,6 +80,8 @@ def test__generate_dimensions_column_enabled_has_sql_returns_dimension(
     column.meta.dimension.sql = "col1 sql"
     column.meta.dimension.description = "col1 description"
     column.meta.dimension.value_format_name = None
+    _extract_column_label_mock.return_value = {}
+
     assert generator._generate_dimensions(model, adapter_type) == [
         {
             "name": "col1",
@@ -93,9 +96,10 @@ def test__generate_dimensions_column_enabled_has_sql_returns_dimension(
     ]
 
 
+@patch("yoda_dbt2looker.generator._extract_column_label")
 @patch("yoda_dbt2looker.generator.map_adapter_type_to_looker")
 def test__generate_dimensions_column_enabled_no_sql_returns_dimension(
-    map_adapter_type_to_looker_mock,
+    map_adapter_type_to_looker_mock, _extract_column_label_mock
 ):
     model = MagicMock()
     column = MagicMock()
@@ -110,6 +114,7 @@ def test__generate_dimensions_column_enabled_no_sql_returns_dimension(
     column.meta.dimension.sql = None
     column.meta.dimension.description = "col1 description"
     column.meta.dimension.value_format_name = None
+    _extract_column_label_mock.return_value = {}
     assert generator._generate_dimensions(model, adapter_type) == [
         {
             "name": "col1",
@@ -124,9 +129,10 @@ def test__generate_dimensions_column_enabled_no_sql_returns_dimension(
     ]
 
 
+@patch("yoda_dbt2looker.generator._extract_column_label")
 @patch("yoda_dbt2looker.generator.map_adapter_type_to_looker")
 def test__generate_dimensions_column_enabled_is_primary_key_returns_dimension(
-    map_adapter_type_to_looker_mock,
+    map_adapter_type_to_looker_mock, _extract_column_label_mock
 ):
     model = MagicMock()
     column = MagicMock()
@@ -142,6 +148,7 @@ def test__generate_dimensions_column_enabled_is_primary_key_returns_dimension(
     column.meta.dimension.description = "col1 description"
     column.meta.dimension.value_format_name = None
     model.meta.primary_key = "col1"
+    _extract_column_label_mock.return_value = {}
     assert generator._generate_dimensions(model, adapter_type) == [
         {
             "name": "col1",
@@ -157,9 +164,46 @@ def test__generate_dimensions_column_enabled_is_primary_key_returns_dimension(
     ]
 
 
+@patch("yoda_dbt2looker.generator._extract_column_label")
+@patch("yoda_dbt2looker.generator.map_adapter_type_to_looker")
+def test__generate_dimensions_column_enabled_is_primary_key_returns_dimension_column_has_label(
+    map_adapter_type_to_looker_mock, _extract_column_label_mock
+):
+    model = MagicMock()
+    column = MagicMock()
+    model.columns = {"col1": column}
+    column.meta.dimension.enabled = True
+    data_type = MagicMock()
+    column.data_type = data_type
+    map_adapter_type_to_looker_mock.return_value = "number"
+    adapter_type = MagicMock()
+    column.meta.dimension.name = None
+    column.name = "col1"
+    column.meta.dimension.sql = None
+    column.meta.dimension.description = "col1 description"
+    column.meta.dimension.value_format_name = None
+    model.meta.primary_key = "col1"
+    _extract_column_label_mock.return_value = {"label": "label1"}
+    assert generator._generate_dimensions(model, adapter_type) == [
+        {
+            "name": "col1",
+            "type": "number",
+            "sql": f"${{TABLE}}.col1",
+            "description": "col1 description",
+            "primary_key": "yes",
+            "label": "label1",
+        }
+    ]
+    assert map_adapter_type_to_looker_mock.mock_calls == [
+        call(adapter_type, data_type),
+        call(adapter_type, data_type),
+    ]
+
+
+@patch("yoda_dbt2looker.generator._extract_column_label")
 @patch("yoda_dbt2looker.generator.map_adapter_type_to_looker")
 def test__generate_dimensions_column_enabled_col_has_value_format_name_but_not_number(
-    map_adapter_type_to_looker_mock,
+    map_adapter_type_to_looker_mock, _extract_column_label_mock
 ):
     model = MagicMock()
     column = MagicMock()
@@ -174,6 +218,7 @@ def test__generate_dimensions_column_enabled_col_has_value_format_name_but_not_n
     column.meta.dimension.sql = None
     column.meta.dimension.description = "col1 description"
     column.meta.dimension.value_format_name.value = "format1"
+    _extract_column_label_mock.return_value = {}
     assert generator._generate_dimensions(model, adapter_type) == [
         {
             "name": "col1",
@@ -189,9 +234,10 @@ def test__generate_dimensions_column_enabled_col_has_value_format_name_but_not_n
     ]
 
 
+@patch("yoda_dbt2looker.generator._extract_column_label")
 @patch("yoda_dbt2looker.generator.map_adapter_type_to_looker")
 def test__generate_dimensions_column_enabled_col_has_value_format_name(
-    map_adapter_type_to_looker_mock,
+    map_adapter_type_to_looker_mock, _extract_column_label_mock
 ):
     model = MagicMock()
     column = MagicMock()
@@ -206,6 +252,7 @@ def test__generate_dimensions_column_enabled_col_has_value_format_name(
     column.meta.dimension.sql = None
     column.meta.dimension.description = "col1 description"
     column.meta.dimension.value_format_name.value = "format1"
+    _extract_column_label_mock.return_value = {}
     assert generator._generate_dimensions(model, adapter_type) == [
         {
             "name": "col1",
@@ -381,6 +428,22 @@ def test_lookml_exposure_measure():
         "sql": "(SUM(${model_2.interacted_users} ) / SUM( ${model_1.total_users})",
         "description": "measure_description",
     }
+    measure1 = models.Dbt2LookerExploreMeasure(
+        name="measure_1",
+        model="ref('model_1')",
+        sql="(SUM(${ref('model_2').interacted_users}) / SUM(${ref('model_1').total_users})",
+        description="measure_description",
+        type=models.LookerExposureMeasures.number.value,
+        label="measure1",
+    )
+    value = generator.lookml_exposure_measure(measure1)
+    assert value == {
+        "name": "measure_1",
+        "type": "number",
+        "sql": "(SUM(${model_2.interacted_users} ) / SUM( ${model_1.total_users})",
+        "description": "measure_description",
+        "label": "measure1",
+    }
 
 
 def test__get_model_relation_name():
@@ -425,6 +488,24 @@ def test_lookml_calculated_dimension():
         "sql": "case when 1=1 then 1 else 0 end",
         "description": "custom dimension",
         "primary_key": "yes",
+    }
+    dimension1 = models.Dbt2LookerExploreDimension(
+        name="custom_dimension_1",
+        model="ref('model_1')",
+        sql="case when 1=1 then 1 else 0 end",
+        description="custom dimension",
+        type="number",
+        primary_key=True,
+        label="dimension1",
+    )
+    value = generator.lookml_calculated_dimension(dimension1)
+    assert value == {
+        "name": "custom_dimension_1",
+        "type": "number",
+        "sql": "case when 1=1 then 1 else 0 end",
+        "description": "custom dimension",
+        "primary_key": "yes",
+        "label": "dimension1"
     }
 
 
@@ -558,3 +639,36 @@ def test_lookml_exposure_measure_with_parameter():
         "sql": "(CASE WHEN date = {% parameter model_1.end_date %}  THEN  ${model_1.total_outstanding_points_end_of_day} END)",
         "description": "measure_description",
     }
+
+
+def test__extract_column_label():
+    model = MagicMock()
+    model.model_labels = None
+    assert generator._extract_column_label(model, MagicMock()) == {}
+    model = MagicMock()
+    model.model_labels.columns_labels = None
+    assert generator._extract_column_label(model, MagicMock()) == {}
+    model = MagicMock()
+    model.model_labels.columns_labels = {}
+    column = MagicMock()
+    column.name = "col1"
+    assert generator._extract_column_label(model, column) == {}
+    model = MagicMock()
+    model.model_labels.columns_labels = {"col1": "label1"}
+    assert generator._extract_column_label(model, column) == {"label": "label1"}
+
+
+def test__generate_view_label_if_needed():
+    lookml = {"view": {}}
+    model = MagicMock()
+    model.model_labels = None
+    generator._generate_view_label_if_needed(model, lookml)
+    assert lookml == {"view": {}}
+    model = MagicMock()
+    model.model_labels.model_label = None
+    generator._generate_view_label_if_needed(model, lookml)
+    assert lookml == {"view": {}}
+    model = MagicMock()
+    model.model_labels.model_label = "label1"
+    generator._generate_view_label_if_needed(model, lookml)
+    assert lookml == {"view": {"label": "label1"}}
