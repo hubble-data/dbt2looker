@@ -195,32 +195,42 @@ def normalise_spark_types(column_type: str) -> str:
     return re.match(r'^[^\(]*', column_type).group(0)
 
 
-def map_adapter_type_to_looker(adapter_type: models.SupportedDbtAdapters, column_type: str):
+def map_adapter_type_to_looker(adapter_type: models.SupportedDbtAdapters, column_type: str, column_name: str = None):
     normalised_column_type = (normalise_spark_types(column_type) if adapter_type == models.SupportedDbtAdapters.spark.value else column_type).upper()
     looker_type = LOOKER_DTYPE_MAP[adapter_type].get(normalised_column_type)
     if (column_type is not None) and (looker_type is None):
-        logging.warning(f'Column type {column_type} not supported for conversion from {adapter_type} to looker. No dimension will be created.')
+        if column_name:
+            warning_start = f'For column {column_name}, c'
+        else:
+            warning_start = 'C'
+        logging.warning(
+            warning_start
+            + f'olumn type {column_type} is not supported for conversion from {adapter_type} to looker. '
+            + 'No dimension will be created.'
+        )
     return looker_type
 
 
 def lookml_date_time_dimension_group(column: models.DbtModelColumn, adapter_type: models.SupportedDbtAdapters):
+    col_name = column.meta.dimension.name or column.name
     return {
-        'name': column.meta.dimension.name or column.name,
+        'name': col_name,
         'type': 'time',
         'sql': column.meta.dimension.sql or f'${{TABLE}}.{column.name}',
         'description': column.meta.dimension.description or column.description,
-        'datatype': map_adapter_type_to_looker(adapter_type, column.data_type),
+        'datatype': map_adapter_type_to_looker(adapter_type, column.data_type, col_name),
         'timeframes': ['raw', 'time', 'hour', 'date', 'week', 'month', 'quarter', 'year']
     }
 
 
 def lookml_date_dimension_group(column: models.DbtModelColumn, adapter_type: models.SupportedDbtAdapters):
+    col_name = column.meta.dimension.name or column.name
     return {
-        'name': column.meta.dimension.name or column.name,
+        'name': col_name,
         'type': 'time',
         'sql': column.meta.dimension.sql or f'${{TABLE}}.{column.name}',
         'description': column.meta.dimension.description or column.description,
-        'datatype': map_adapter_type_to_looker(adapter_type, column.data_type),
+        'datatype': map_adapter_type_to_looker(adapter_type, column.data_type, col_name),
         'timeframes': ['raw', 'date', 'week', 'month', 'quarter', 'year']
     }
 
@@ -229,13 +239,13 @@ def lookml_dimension_groups_from_model(model: models.DbtModel, adapter_type: mod
     date_times = [
         lookml_date_time_dimension_group(column, adapter_type)
         for column in model.columns.values()
-        if map_adapter_type_to_looker(adapter_type, column.data_type) in looker_date_time_types
+        if map_adapter_type_to_looker(adapter_type, column.data_type, column.name) in looker_date_time_types
     ]
     dates = [
         lookml_date_dimension_group(column, adapter_type)
         for column in model.columns.values()
         if column.meta.dimension.enabled
-        and map_adapter_type_to_looker(adapter_type, column.data_type) in looker_date_types
+        and map_adapter_type_to_looker(adapter_type, column.data_type, column.name) in looker_date_types
     ]
     return date_times + dates
 
@@ -244,19 +254,19 @@ def lookml_dimensions_from_model(model: models.DbtModel, adapter_type: models.Su
     return [
         {
             'name': column.meta.dimension.name or column.name,
-            'type': map_adapter_type_to_looker(adapter_type, column.data_type),
+            'type': map_adapter_type_to_looker(adapter_type, column.data_type, column.name),
             'sql': column.meta.dimension.sql or f'${{TABLE}}.{column.name}',
             'description': column.meta.dimension.description or column.description,
             **(
                 {'value_format_name': column.meta.dimension.value_format_name.value}
                 if (column.meta.dimension.value_format_name
-                    and map_adapter_type_to_looker(adapter_type, column.data_type) == 'number')
+                    and map_adapter_type_to_looker(adapter_type, column.data_type, column.name) == 'number')
                 else {}
             )
         }
         for column in model.columns.values()
         if column.meta.dimension.enabled
-        and map_adapter_type_to_looker(adapter_type, column.data_type) in looker_scalar_types
+        and map_adapter_type_to_looker(adapter_type, column.data_type, column.name) in looker_scalar_types
     ]
 
 
