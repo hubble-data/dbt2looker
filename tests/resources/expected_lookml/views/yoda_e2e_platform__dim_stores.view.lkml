@@ -210,14 +210,14 @@ view: yoda_e2e_platform__dim_stores {
     type: date
     sql: {% dwh_updated_at date_range_filter %} ;;
     primary_key: no
-    label: "Start Period"
+    label: "Start of Period"
   }
 
   measure: sums_test {
     description: "non aggregative measure test"
     type: number
     sql: (${yoda_e2e_loyalty__fact_store_profile_daily.sum_points_redeemed_measure}  /  ${yoda_e2e_loyalty__fact_store_profile_daily.sum_redemptions_measure}) ;;
-    label: "Sum Test"
+    label: "Sums of Points"
   }
 
   measure: count {

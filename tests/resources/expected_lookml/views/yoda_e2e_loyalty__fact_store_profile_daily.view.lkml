@@ -22,7 +22,7 @@ view: yoda_e2e_loyalty__fact_store_profile_daily {
     type: string
     sql: ${TABLE}.app_key ;;
     description: "TODO: Update Column app_key Information"
-    label: "store id"
+    label: "Store ID"
   }
 
   dimension: count_campaigns {
@@ -136,5 +136,5 @@ view: yoda_e2e_loyalty__fact_store_profile_daily {
     description: "Default count measure"
   }
 
-  label: "stores metrics"
+  label: "Stores Metrics"
 }
