@@ -33,17 +33,8 @@ def raise_error_context(error: jsonschema.ValidationError, offset=""):
     logging.error(f"{offset}Error in manifest at {path}: {error.message}")
 
 
-def validate_catalog(raw_catalog: dict):
-    return True
-
-
 def parse_dbt_project_config(raw_config: dict):
     return models.DbtProjectConfig(**raw_config)
-
-
-def parse_catalog_nodes(raw_catalog: dict):
-    catalog = models.DbtCatalog(**raw_catalog)
-    return catalog.nodes
 
 
 def parse_adapter_type(raw_manifest: dict):
@@ -101,7 +92,7 @@ def parse_exposures(raw_manifest: dict, tag=None) -> List[models.DbtExposure]:
 
 def check_models_for_missing_column_types(dbt_typed_models: List[models.DbtModel]):
     for model in dbt_typed_models:
-        if all([col.data_type is None for col in model.columns.values()]):
+        if all([col.type is None for col in model.columns.values()]):
             logging.debug(
                 "Model %s has no typed columns, no dimensions will be generated. %s",
                 model.unique_id,
@@ -111,11 +102,9 @@ def check_models_for_missing_column_types(dbt_typed_models: List[models.DbtModel
 
 def parse_typed_models(
     raw_manifest: dict,
-    raw_catalog: dict,
     dbt_project_name: str,
     tag: Optional[str] = None,
 ):
-    catalog_nodes = parse_catalog_nodes(raw_catalog)
     dbt_models = parse_models(raw_manifest, tag=tag)
     manifest = models.DbtManifest(**raw_manifest)
     typed_dbt_exposures: List[models.DbtExposure] = parse_exposures(
@@ -216,39 +205,9 @@ def parse_typed_models(
             ),
         )
 
-    # Check catalog for models
-    for model in dbt_models:
-        if model.unique_id not in catalog_nodes:
-            logging.warning(
-                f"Model {model.unique_id} not found in catalog. No looker view will be generated. "
-                f"Check if model has materialized in {adapter_type} at {model.relation_name}"
-            )
-
-    # Update dbt models with data types from catalog
-    dbt_typed_models = [
-        model.copy(
-            update={
-                "columns": {
-                    column.name: column.copy(
-                        update={
-                            "data_type": get_column_type_from_catalog(
-                                catalog_nodes, model.unique_id, column.name
-                            )
-                        }
-                    )
-                    for column in model.columns.values()
-                }
-            }
-        )
-        for model in dbt_models
-        if model.unique_id in catalog_nodes
-    ]
-    logging.debug("Found catalog entries for %d models", len(dbt_typed_models))
-    logging.debug(
-        "Catalog entries missing for %d models", len(dbt_models) - len(dbt_typed_models)
-    )
-    check_models_for_missing_column_types(dbt_typed_models)
-    return dbt_typed_models
+    logging.debug("Found %d models", len(dbt_models))
+    check_models_for_missing_column_types(dbt_models)
+    return dbt_models
 
 
 def _assign_model_labels(models_labels, model, model_node):
@@ -312,11 +271,3 @@ def _extract_exposure_models(
             if not exposure_model.get(main_model):
                 exposure_model[main_model] = []
             exposure_model[main_model].append(looker_exposure_object)
-
-
-def get_column_type_from_catalog(
-    catalog_nodes: Dict[str, models.DbtCatalogNode], model_id: str, column_name: str
-):
-    node = catalog_nodes.get(model_id)
-    column = None if node is None else node.columns.get(column_name)
-    return None if column is None else column.type

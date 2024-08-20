@@ -219,7 +219,7 @@ def lookml_date_time_dimension_group(
         "type": "time",
         "sql": column.meta.dimension.sql or f"${{TABLE}}.{column.name}",
         "description": column.meta.dimension.description or column.description,
-        "datatype": map_adapter_type_to_looker(adapter_type, column.data_type),
+        "datatype": map_adapter_type_to_looker(adapter_type, column.type),
         "timeframes": [
             "raw",
             "time",
@@ -241,7 +241,7 @@ def lookml_date_dimension_group(
         "type": "time",
         "sql": column.meta.dimension.sql or f"${{TABLE}}.{column.name}",
         "description": column.meta.dimension.description or column.description,
-        "datatype": map_adapter_type_to_looker(adapter_type, column.data_type),
+        "datatype": map_adapter_type_to_looker(adapter_type, column.type),
         "timeframes": ["raw", "date", "week", "month", "quarter", "year"],
     }
 
@@ -252,14 +252,14 @@ def lookml_dimension_groups_from_model(
     date_times = [
         lookml_date_time_dimension_group(column, adapter_type)
         for column in model.columns.values()
-        if map_adapter_type_to_looker(adapter_type, column.data_type)
+        if map_adapter_type_to_looker(adapter_type, column.type)
         in looker_date_time_types
     ]
     dates = [
         lookml_date_dimension_group(column, adapter_type)
         for column in model.columns.values()
         if column.meta.dimension.enabled
-        and map_adapter_type_to_looker(adapter_type, column.data_type)
+        and map_adapter_type_to_looker(adapter_type, column.type)
         in looker_date_types
     ]
 
@@ -286,7 +286,7 @@ def _generate_dimensions(model: models.DbtModel, adapter_type):
     return [
         {
             "name": column.meta.dimension.name or column.name,
-            "type": map_adapter_type_to_looker(adapter_type, column.data_type),
+            "type": map_adapter_type_to_looker(adapter_type, column.type),
             "sql": column.meta.dimension.sql or f"${{TABLE}}.{column.name}",
             "description": column.meta.dimension.description or column.description,
             **({"primary_key": "yes"} if model.meta.primary_key == column.name else {}),
@@ -294,7 +294,7 @@ def _generate_dimensions(model: models.DbtModel, adapter_type):
                 {"value_format_name": column.meta.dimension.value_format_name.value}
                 if (
                     column.meta.dimension.value_format_name
-                    and map_adapter_type_to_looker(adapter_type, column.data_type)
+                    and map_adapter_type_to_looker(adapter_type, column.type)
                     == "number"
                 )
                 else {}
@@ -305,7 +305,7 @@ def _generate_dimensions(model: models.DbtModel, adapter_type):
         }
         for column in model.columns.values()
         if column.meta.dimension.enabled
-        and map_adapter_type_to_looker(adapter_type, column.data_type)
+        and map_adapter_type_to_looker(adapter_type, column.type)
         in looker_scalar_types
     ]
 

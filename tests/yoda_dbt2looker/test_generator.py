@@ -56,7 +56,7 @@ def test__generate_dimensions_column_enabled_not_scalar_type_returns_empty_list(
     model.columns = {"col1": column}
     column.meta.dimension.enabled = True
     data_type = MagicMock()
-    column.data_type = data_type
+    column.type = data_type
     map_adapter_type_to_looker_mock.return_value = "date"
     adapter_type = MagicMock()
     assert generator._generate_dimensions(model, adapter_type) == []
@@ -73,7 +73,7 @@ def test__generate_dimensions_column_enabled_has_sql_returns_dimension(
     model.columns = {"col1": column}
     column.meta.dimension.enabled = True
     data_type = MagicMock()
-    column.data_type = data_type
+    column.type = data_type
     map_adapter_type_to_looker_mock.return_value = "number"
     adapter_type = MagicMock()
     column.meta.dimension.name = "col1"
@@ -106,7 +106,7 @@ def test__generate_dimensions_column_enabled_no_sql_returns_dimension(
     model.columns = {"col1": column}
     column.meta.dimension.enabled = True
     data_type = MagicMock()
-    column.data_type = data_type
+    column.type = data_type
     map_adapter_type_to_looker_mock.return_value = "number"
     adapter_type = MagicMock()
     column.meta.dimension.name = None
@@ -139,7 +139,7 @@ def test__generate_dimensions_column_enabled_is_primary_key_returns_dimension(
     model.columns = {"col1": column}
     column.meta.dimension.enabled = True
     data_type = MagicMock()
-    column.data_type = data_type
+    column.type = data_type
     map_adapter_type_to_looker_mock.return_value = "number"
     adapter_type = MagicMock()
     column.meta.dimension.name = None
@@ -174,7 +174,7 @@ def test__generate_dimensions_column_enabled_is_primary_key_returns_dimension_co
     model.columns = {"col1": column}
     column.meta.dimension.enabled = True
     data_type = MagicMock()
-    column.data_type = data_type
+    column.type = data_type
     map_adapter_type_to_looker_mock.return_value = "number"
     adapter_type = MagicMock()
     column.meta.dimension.name = None
@@ -210,7 +210,7 @@ def test__generate_dimensions_column_enabled_col_has_value_format_name_but_not_n
     model.columns = {"col1": column}
     column.meta.dimension.enabled = True
     data_type = MagicMock()
-    column.data_type = data_type
+    column.type = data_type
     map_adapter_type_to_looker_mock.return_value = "yesno"
     adapter_type = MagicMock()
     column.meta.dimension.name = None
@@ -244,7 +244,7 @@ def test__generate_dimensions_column_enabled_col_has_value_format_name(
     model.columns = {"col1": column}
     column.meta.dimension.enabled = True
     data_type = MagicMock()
-    column.data_type = data_type
+    column.type = data_type
     map_adapter_type_to_looker_mock.return_value = "number"
     adapter_type = MagicMock()
     column.meta.dimension.name = None
