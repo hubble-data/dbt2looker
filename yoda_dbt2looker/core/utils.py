@@ -10,10 +10,22 @@ try:
 except ImportError:
     from yaml import Loader
 
-from . import parser
+from .. import parser
 
-MANIFEST_FILENAME = 'manifest.json'
-DBT_PROJECT_FILENAME = 'dbt_project.yml'
+from config import config
+
+
+def configure_logging(log_level: str = config.DEFAULT_LOG_LEVEL):
+    logging.basicConfig(
+        level=getattr(logging, log_level),
+        format='%(asctime)s %(levelname)-6s %(message)s',
+        datefmt='%H:%M:%S',
+    )
+
+
+def write_lookml_file(file_path: str, contents: str) -> None:
+    with open(file_path, 'w') as f:
+        f.write(contents)
 
 
 def load_json_file(file_path: Path) -> Dict[str, Any]:
@@ -35,7 +47,7 @@ def load_yaml_file(file_path: Path) -> Dict[str, Any]:
 
 
 def get_manifest(prefix: str) -> Dict[str, Any]:
-    manifest_path = os.path.join(prefix, MANIFEST_FILENAME)
+    manifest_path = os.path.join(prefix, config.MANIFEST_FILENAME)
     raw_manifest = load_json_file(manifest_path)
     parser.validate_manifest(raw_manifest)
     logging.debug(f'Detected valid manifest at {manifest_path}')
@@ -43,7 +55,7 @@ def get_manifest(prefix: str) -> Dict[str, Any]:
 
 
 def get_dbt_project_config(prefix: str) -> Dict[str, Any]:
-    project_path = os.path.join(prefix, DBT_PROJECT_FILENAME)
+    project_path = os.path.join(prefix, config.DBT_PROJECT_FILENAME)
     project_config = load_yaml_file(project_path)
     logging.debug(f'Detected valid dbt config at {project_path}')
     return project_config

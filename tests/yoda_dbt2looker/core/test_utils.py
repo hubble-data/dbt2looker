@@ -1,9 +1,11 @@
 import pytest
+import logging
 import json
 import yaml
 from pathlib import Path
 from unittest.mock import mock_open, patch
-from yoda_dbt2looker import utils
+from yoda_dbt2looker.core import utils
+from yoda_dbt2looker.core.config import config
 
 
 class TestUtils:
@@ -22,6 +24,33 @@ class TestUtils:
             "name": "test_project",
             "version": "1.0.0"
         }
+    
+    @patch('logging.basicConfig')
+    def test_configure_logging_default(self, mock_basicConfig):
+        utils.configure_logging()
+        mock_basicConfig.assert_called_once_with(
+            level=getattr(logging, config.DEFAULT_LOG_LEVEL),
+            format='%(asctime)s %(levelname)-6s %(message)s',
+            datefmt='%H:%M:%S',
+        )
+
+    @patch('logging.basicConfig')
+    def test_configure_logging_custom(self, mock_basicConfig):
+        custom_level = 'DEBUG'
+        utils.configure_logging(custom_level)
+        mock_basicConfig.assert_called_once_with(
+            level=getattr(logging, custom_level),
+            format='%(asctime)s %(levelname)-6s %(message)s',
+            datefmt='%H:%M:%S',
+        )
+
+    @patch('builtins.open', new_callable=mock_open)
+    def test_write_lookml_file(self, mock_file):
+        file_path = 'test_file.lkml'
+        contents = 'test contents'
+        utils.write_lookml_file(file_path, contents)
+        mock_file.assert_called_once_with(file_path, 'w')
+        mock_file().write.assert_called_once_with(contents)
 
     @patch("pathlib.Path.open", new_callable=mock_open, read_data=json.dumps({"key": "value"}))
     def test_load_json_file(self, mock_file):
