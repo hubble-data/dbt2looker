@@ -45,7 +45,6 @@ def convert(target_dir=config.TARGET_DIR, project_dir=config.PROJECT_DIR, output
     adapter_type = parse_adapter_type(raw_manifest)
 
     _generate_lookml_views(typed_dbt_models, adapter_type, output_dir)
-    _generate_lookml_models(raw_manifest, typed_dbt_models, dbt_project_config, tag, output_dir)
     logging.info('Convertion finished successfully')
 
 
@@ -53,6 +52,3 @@ def _generate_lookml_views(typed_dbt_models: List[DbtModel], adapter_type: str, 
     pass
 
 
-def _generate_lookml_models(raw_manifest: Dict[str, Any], typed_dbt_models: List[DbtModel],
-                            dbt_project_config: DbtProjectConfig, tag: Optional[str], output_dir: str) -> None:
-    pass
