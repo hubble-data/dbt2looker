@@ -12,10 +12,10 @@ except ImportError:
 
 from .. import parser
 
-from config import config
+from .config import config
 
 
-def configure_logging(log_level: str = config.DEFAULT_LOG_LEVEL):
+def configure_logging(log_level: str = config.LOG_LEVEL):
     logging.basicConfig(
         level=getattr(logging, log_level),
         format='%(asctime)s %(levelname)-6s %(message)s',
