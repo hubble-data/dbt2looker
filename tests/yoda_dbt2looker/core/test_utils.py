@@ -52,12 +52,12 @@ class TestUtils:
         mock_file.assert_called_once_with(file_path, 'w')
         mock_file().write.assert_called_once_with(contents)
 
-    @patch("pathlib.Path.open", new_callable=mock_open, read_data=json.dumps({"key": "value"}))
+    @patch("yoda_dbt2looker.core.utils.open", new_callable=mock_open, read_data=json.dumps({"key": "value"}))
     def test_load_json_file(self, mock_file):
         result = utils.load_json_file(Path("dummy_path.json"))
         assert result == {"key": "value"}
 
-    @patch("pathlib.Path.open", new_callable=mock_open, read_data=yaml.dump({"key": "value"}))
+    @patch("yoda_dbt2looker.core.utils.open", new_callable=mock_open, read_data=yaml.dump({"key": "value"}))
     def test_load_yaml_file(self, mock_file):
         result = utils.load_yaml_file(Path("dummy_path.yml"))
         assert result == {"key": "value"}

@@ -9,6 +9,7 @@ class Config:
     LOG_LEVEL: str = 'INFO'
     MANIFEST_FILENAME: str = 'manifest.json'
     DBT_PROJECT_FILENAME: str = 'dbt_project.yml'
+    YODA_SNOWFLAKE_TAG: str = 'yoda_snowflake'
 
 
 config = Config()
