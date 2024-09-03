@@ -365,34 +365,3 @@ class DbtManifest(BaseModel):
     nodes: Dict[str, Union[DbtModel, DbtNode]]
     exposures: Dict[str, Union[DbtExposure, DbtNode]]
     metadata: DbtManifestMetadata
-
-
-class DbtCatalogNodeMetadata(BaseModel):
-    type: str
-    db_schema: str = Field(..., alias="schema")
-    name: str
-    comment: Optional[str]
-    owner: Optional[str]
-
-
-class DbtCatalogNodeColumn(BaseModel):
-    type: str
-    comment: Optional[str]
-    index: int
-    name: str
-
-
-class DbtCatalogNode(BaseModel):
-    metadata: DbtCatalogNodeMetadata
-    columns: Dict[str, DbtCatalogNodeColumn]
-
-    @validator("columns")
-    def case_insensitive_column_names(cls, v: Dict[str, DbtCatalogNodeColumn]):
-        return {
-            name.lower(): column.copy(update={"name": column.name.lower()})
-            for name, column in v.items()
-        }
-
-
-class DbtCatalog(BaseModel):
-    nodes: Dict[str, DbtCatalogNode]

@@ -1,10 +1,10 @@
 view: yoda_e2e_infra__s3_cost_cold {
   sql_table_name: public_yoda_e2e_infra.s3_cost_cold ;;
 
-  dimension_group: billing_period {
+  dimension_group: bill_start_date {
     type: time
-    sql: ${TABLE}.billing_period ;;
-    description: "Billing period date monthly"
+    sql: ${TABLE}.bill_start_date ;;
+    description: "Billing date for a specific S3 service (day granularity)"
     datatype: timestamp
     timeframes: [
       raw,
@@ -18,10 +18,10 @@ view: yoda_e2e_infra__s3_cost_cold {
     ]
   }
 
-  dimension_group: bill_start_date {
+  dimension_group: billing_period {
     type: time
-    sql: ${TABLE}.bill_start_date ;;
-    description: "Billing date for a specific S3 service (day granularity)"
+    sql: ${TABLE}.billing_period ;;
+    description: "Billing period date monthly"
     datatype: timestamp
     timeframes: [
       raw,
@@ -41,10 +41,10 @@ view: yoda_e2e_infra__s3_cost_cold {
     description: "Bucket Name"
   }
 
-  dimension: product_product_family {
-    type: string
-    sql: ${TABLE}.product_product_family ;;
-    description: "Data Transfer, API Request, Storage, Fee"
+  dimension: cost {
+    type: number
+    sql: ${TABLE}.cost ;;
+    description: "Cost per product family/usage type"
   }
 
   dimension: line_item_usage_type {
@@ -53,10 +53,10 @@ view: yoda_e2e_infra__s3_cost_cold {
     description: "Out/In-Bytes, Requests-Tier,TimedStorage, StorageAnalytics, DataTransfer, Inventory-ObjectsListed, Retrieval, EarlyDelete-ByteHrs"
   }
 
-  dimension: cost {
-    type: number
-    sql: ${TABLE}.cost ;;
-    description: "Cost per product family/usage type"
+  dimension: product_product_family {
+    type: string
+    sql: ${TABLE}.product_product_family ;;
+    description: "Data Transfer, API Request, Storage, Fee"
   }
 
   measure: count {

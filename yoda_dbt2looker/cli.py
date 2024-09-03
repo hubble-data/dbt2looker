@@ -37,18 +37,6 @@ def get_manifest(prefix: str):
     return raw_manifest
 
 
-def get_catalog(prefix: str):
-    catalog_path = os.path.join(prefix, 'catalog.json')
-    try:
-        with open(catalog_path, 'r') as f:
-            raw_catalog = json.load(f)
-    except FileNotFoundError as e:
-        logging.error(f'Could not find catalog file at {catalog_path}. Use --target-dir to change the search path for the catalog.json file.')
-        raise SystemExit('Failed')
-    parser.validate_catalog(raw_catalog)
-    logging.debug(f'Detected valid catalog at {catalog_path}')
-    return raw_catalog
-
 
 def get_dbt_project_config(prefix: str):
     project_path  = os.path.join(prefix, 'dbt_project.yml')
@@ -77,7 +65,7 @@ def run():
     )
     argparser.add_argument(
         '--target-dir',
-        help='Path to dbt target directory containing manifest.json and catalog.json. Default is "./target"',
+        help='Path to dbt target directory containing manifest.json file. Default is "./target"',
         default='./target',
         type=str,
     )
@@ -112,12 +100,11 @@ def run_convert(target_dir='./target', project_dir='./', output_dir=DEFAULT_LOOK
 
     # Load raw manifest file
     raw_manifest = get_manifest(prefix=target_dir)
-    raw_catalog = get_catalog(prefix=target_dir)
     raw_config = get_dbt_project_config(prefix=project_dir)
 
     # Get dbt models from manifestpo
     dbt_project_config = parser.parse_dbt_project_config(raw_config)
-    typed_dbt_models = parser.parse_typed_models(raw_manifest, raw_catalog, dbt_project_config.name, tag=tag)
+    typed_dbt_models = parser.parse_typed_models(raw_manifest, dbt_project_config.name, tag=tag)
     typed_dbt_exposures: List[models.DbtExposure] = parser.parse_exposures(raw_manifest, tag=tag)
     adapter_type = parser.parse_adapter_type(raw_manifest)
 
