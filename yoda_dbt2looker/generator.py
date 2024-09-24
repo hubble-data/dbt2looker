@@ -416,7 +416,8 @@ def lookml_exposure_measure(measure: models.Dbt2LookerExploreMeasure):
         "sql": _convert_all_refs_to_relation_name(
             _remove_escape_characters(measure.sql), False
         ),
-        ** ({"label": measure.label} if measure.label else {}),
+        **({"label": measure.label} if measure.label else {}),
+        **({"percentile": measure.percentile} if measure.percentile else {}),
     }
 
 

@@ -218,6 +218,7 @@ class Dbt2LookerExploreMeasure(BaseModel):
     name: str
     model: str
     type: LookerExposureMeasures
+    percentile: Optional[str]
     sql: str
     filters: Optional[List[Dict[str, str]]] = None
     description: Optional[str] = ""

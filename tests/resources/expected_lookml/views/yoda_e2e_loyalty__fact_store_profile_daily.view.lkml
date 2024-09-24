@@ -131,6 +131,14 @@ view: yoda_e2e_loyalty__fact_store_profile_daily {
     value_format_name: decimal_0
   }
 
+  measure: precentile_test {
+    description: "precentile test"
+    type: percentile
+    sql: ${yoda_e2e_loyalty__fact_store_profile_daily.sum_points_redeemed_measure} ;;
+    label: "Precentile Of Points"
+    percentile: 75
+  }
+
   measure: count {
     type: count
     description: "Default count measure"
