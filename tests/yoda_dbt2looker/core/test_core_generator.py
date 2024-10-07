@@ -80,7 +80,16 @@ class TestGenerator:
         mock_column_2.data_type = "date"
         mock_dbt_model.columns = {"col1": mock_column_1, "col2": mock_column_2}
 
-        mock_map_adapter_type_to_looker.side_effect = ["timestamp", "timestamp", "datetime", "datetime"]
+        mock_map_adapter_type_to_looker.side_effect = [
+            "timestamp",
+            "timestamp",
+            "datetime",
+            "datetime",
+            "timestamp",
+            "timestamp",
+            "datetime",
+            "datetime",
+        ]
         mock_lookml_date_time_dimension_group.return_value = "datetime_group"
 
         result = generator.lookml_dimension_groups_from_model(mock_dbt_model, SupportedDbtAdapters.spark.value)
@@ -88,6 +97,18 @@ class TestGenerator:
         assert result == ["datetime_group", "datetime_group"]
         mock_lookml_date_time_dimension_group.assert_has_calls(
             [call(mock_column_1, SupportedDbtAdapters.spark), call(mock_column_2, SupportedDbtAdapters.spark)])
+
+        result = generator.lookml_dimension_groups_from_model(
+            mock_dbt_model, SupportedDbtAdapters.databricks.value
+        )
+
+        assert result == ["datetime_group", "datetime_group"]
+        mock_lookml_date_time_dimension_group.assert_has_calls(
+            [
+                call(mock_column_1, SupportedDbtAdapters.databricks),
+                call(mock_column_2, SupportedDbtAdapters.databricks),
+            ]
+        )
 
     @patch('yoda_dbt2looker.core.generator.map_adapter_type_to_looker')
     def test_lookml_dimensions_from_model(self, mock_map_adapter_type_to_looker):
@@ -118,3 +139,20 @@ class TestGenerator:
         assert result == [expected_dimension]
         mock_map_adapter_type_to_looker.assert_has_calls([call(SupportedDbtAdapters.spark, "integer")
                                                              , call(SupportedDbtAdapters.spark, "integer")])
+        result = generator.lookml_dimensions_from_model(
+            mock_dbt_model, SupportedDbtAdapters.databricks
+        )
+
+        expected_dimension = {
+            "name": "test_column",
+            "type": "number",
+            "sql": "${TABLE}.test_column",
+            "description": "test column",
+        }
+        assert result == [expected_dimension]
+        mock_map_adapter_type_to_looker.assert_has_calls(
+            [
+                call(SupportedDbtAdapters.databricks, "integer"),
+                call(SupportedDbtAdapters.databricks, "integer"),
+            ]
+        )
