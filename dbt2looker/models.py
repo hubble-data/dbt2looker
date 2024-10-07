@@ -1,16 +1,17 @@
 from enum import Enum
-from typing import Union, Dict, List, Optional
+from typing import Any, Union, Dict, List, Optional
 try:
     from typing import Literal
 except ImportError:
     from typing_extensions import Literal
-from pydantic import BaseModel, Field, PydanticValueError, validator
+from pydantic import BaseModel, Field, validator
 
 
 # dbt2looker utility types
-class UnsupportedDbtAdapterError(PydanticValueError):
-    code = 'unsupported_dbt_adapter'
-    msg_template = '{wrong_value} is not a supported dbt adapter'
+class UnsupportedDbtAdapterError(ValueError):
+    def __init__(self, wrong_value: str):
+        msg = f'{wrong_value} is not a supported dbt adapter'
+        super().__init__(msg)
 
 
 class SupportedDbtAdapters(str, Enum):
@@ -82,12 +83,12 @@ class LookerHiddenType(str, Enum):
 class Dbt2LookerMeasure(BaseModel):
     type: LookerMeasureType
     filters: Optional[List[Dict[str, str]]] = []
-    description: Optional[str]
-    sql: Optional[str]
-    value_format_name: Optional[LookerValueFormatName]
-    group_label: Optional[str]
-    label: Optional[str]
-    hidden: Optional[LookerHiddenType]
+    description: Optional[str] = None
+    sql: Optional[str] = None
+    value_format_name: Optional[LookerValueFormatName] = None
+    group_label: Optional[str] = None
+    label: Optional[str] = None
+    hidden: Optional[LookerHiddenType] = None
 
     @validator('filters')
     def filters_are_singular_dicts(cls, v: List[Dict[str, str]]):
@@ -100,10 +101,10 @@ class Dbt2LookerMeasure(BaseModel):
 
 class Dbt2LookerDimension(BaseModel):
     enabled: Optional[bool] = True
-    name: Optional[str]
-    sql: Optional[str]
-    description: Optional[str]
-    value_format_name: Optional[LookerValueFormatName]
+    name: Optional[str] = None
+    sql: Optional[str] = None
+    description: Optional[str] = None
+    value_format_name: Optional[LookerValueFormatName] = None
 
 
 class Dbt2LookerMeta(BaseModel):
@@ -137,13 +138,14 @@ class DbtModelColumnMeta(Dbt2LookerMeta):
 class DbtModelColumn(BaseModel):
     name: str
     description: str
-    data_type: Optional[str]
+    data_type: Optional[str] = None
     meta: DbtModelColumnMeta
 
 
 class DbtNode(BaseModel):
     unique_id: str
     resource_type: str
+    config: Dict[str, Any]
 
 
 class Dbt2LookerExploreJoin(BaseModel):
@@ -200,13 +202,13 @@ class DbtCatalogNodeMetadata(BaseModel):
     type: str
     db_schema: str = Field(..., alias='schema')
     name: str
-    comment: Optional[str]
-    owner: Optional[str]
+    comment: Optional[str] = None
+    owner: Optional[str] = None
 
 
 class DbtCatalogNodeColumn(BaseModel):
     type: str
-    comment: Optional[str]
+    comment: Optional[str] = None
     index: int
     name: str
 
