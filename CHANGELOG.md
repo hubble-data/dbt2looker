@@ -11,6 +11,9 @@ Recent and upcoming changes to dbt2looker
 ### Changed
 - only non-ephemeral models _selected by tag logic_ are checked to ensure the model files are not empty (instead of all models) (#57)
 
+### Fixed
+- now supports `pydantic` v2 (#97)
+
 ## 0.11.0
 ### Added
 - support label and hidden fields (#49)
